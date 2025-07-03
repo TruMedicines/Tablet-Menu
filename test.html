@@ -1,1 +1,44 @@
-test
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tablet Device Simulator</title>
+  <style>
+    body {
+      background: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .tablet-frame {
+      width: 600px;
+      height: 800px;
+      background: #333;
+      border: 16px solid #111;
+      border-radius: 40px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .tablet-ui {
+      width: 100%;
+      height: 100%;
+      background: #fff url('https://raw.githubusercontent.com/TruMedicines/Tablet-Menu/main/Settings%20Menu.jpg') center center no-repeat;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="tablet-frame">
+    <div class="tablet-ui"></div>
+  </div>
+</body>
+</html>
