@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TruMedicines Medication Dispenser</title>
+<style>
+  :root {
+    --blue: #4a80c4;
+    --blue-dark: #3a68a8;
+    --bg: #eef2f8;
+    --header-bg: #ffffff;
+    --text-dark: #17233b;
+    --text-gray: #6b7686;
+    --danger: #c85a4a;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--bg);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-dark);
+    overscroll-behavior: none;
+    user-select: none;
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* header */
+  header {
+    background: var(--header-bg);
+    padding: 10px 16px 14px;
+    text-align: center;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+  }
+  .title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-top: 4px;
+  }
+  .hamburger {
+    position: absolute;
+    left: 0;
+    width: 26px;
+    height: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+  .hamburger span {
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--text-dark);
+  }
+  .title {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.2;
+    padding: 0 30px;
+  }
+  .datetime {
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+  .ble-pill {
+    margin-top: 8px;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #f0d9d9;
+    color: var(--danger);
+  }
+  .ble-pill.connected {
+    background: #d9f0e0;
+    color: #2e8555;
+  }
+
+  /* menu grid */
+  main {
+    flex: 1;
+    padding: 14px 18px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 8px;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    transition: transform 0.08s ease, filter 0.08s ease;
+  }
+  .btn:active {
+    transform: scale(0.97);
+    filter: brightness(0.94);
+  }
+  .btn.primary {
+    background: linear-gradient(180deg, var(--blue), var(--blue-dark));
+    color: #fff;
+    padding: 24px 8px;
+    font-size: 17px;
+    flex: 1;
+  }
+  .btn.busy {
+    filter: grayscale(0.4) brightness(0.85);
+    pointer-events: none;
+  }
+  .btn svg { width: 34px; height: 34px; }
+  .btn.primary svg { width: 44px; height: 44px; }
+
+  /* pastel color variants for non-primary buttons */
+  .btn-yellow    { background: #fbe6a2; color: #6b5215; }
+  .btn-green     { background: #b9e6c4; color: #1f5c33; }
+  .btn-lightblue { background: #bfe0f7; color: #1a4a72; }
+  .btn-orange    { background: #fad3ad; color: #8a4a12; }
+  .btn-violet    { background: #ddc9ee; color: #5a2d80; }
+  .btn-teal      { background: #b9e9df; color: #145c4c; }
+
+  .grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .grid-3col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    flex: 1.6;
+  }
+  .grid-3col .btn {
+    font-size: 24px;
+    padding: 20px 8px;
+    line-height: 1.15;
+    text-align: center;
+  }
+  .grid-3col .btn svg {
+    width: 52px;
+    height: 52px;
+  }
+
+  .footer-btn {
+    margin-top: auto;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .ad-banner {
+    margin-top: auto;
+    height: 56px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+  }
+  .ad-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    transition: opacity 0.35s ease;
+  }
+  .ad-content .ad-title {
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .ad-content .ad-sub {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  .status-line {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-gray);
+    min-height: 18px;
+    padding: 0 20px;
+  }
+  .status-line.error { color: var(--danger); }
+
+  /* fullscreen video/image screens - statically embedded, toggled via .active */
+  .fullscreen-screen {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  .fullscreen-screen.active { display: flex; }
+  .fullscreen-screen video,
+  .fullscreen-screen img,
+  .fullscreen-screen iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border: 0;
+  }
+  .back-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 51;
+    border: none;
+    border-radius: 22px;
+    padding: 10px 18px;
+    background: #ffffff;
+    color: var(--danger);
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  .back-btn.top-right {
+    left: auto;
+    right: 16px;
+  }
+  #video-call-preview,
+  #meds-camera-preview,
+  #video-clinicalstudy {
+    object-fit: cover;
+  }
+  #video-call-preview {
+    transform: scaleX(-1); /* mirror, like a front-facing selfie camera */
+  }
+
+  /* light (non-video) fullscreen screens, e.g. Settings */
+  .fullscreen-screen.light-screen {
+    background: var(--bg);
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 60px 20px 24px;
+    overflow-y: auto;
+  }
+  .settings-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .settings-title {
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-dark);
+  }
+  .settings-list {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border: none;
+    border-bottom: 1px solid var(--bg);
+    padding: 18px 20px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-dark);
+    text-align: left;
+  }
+  .settings-item:last-child { border-bottom: none; }
+  .settings-item .chev { color: var(--text-gray); font-size: 20px; }
+  .settings-version {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 14px;
+    color: var(--text-gray);
+  }
+  .settings-copyright {
+    text-align: center;
+    margin-top: auto;
+    padding-top: 20px;
+    font-size: 12px;
+    color: var(--text-gray);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="title-row">
+      <div class="hamburger"><span></span><span></span><span></span></div>
+      <div class="title">TruMedicines Medication Dispenser</div>
+    </div>
+    <div class="datetime" id="datetime">--</div>
+    <button class="ble-pill" id="ble-pill" onclick="connectBLE()">● Not connected - tap to pair</button>
+  </header>
+
+  <main>
+    <button class="btn primary" id="btn-take" onclick="takeMedication()">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 15.5L15.5 4a5.5 5.5 0 1 1 7.78 7.78L12 20.28" stroke="currentColor" stroke-width="2"/><path d="M9 10l5 5" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="7" r="3" fill="currentColor"/></svg>
+      Take Medication
+    </button>
+
+    <div class="grid-3col">
+      <button class="btn btn-yellow" onclick="showMeds()">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4.5-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        View Meds
+      </button>
+
+      <button class="btn btn-green" id="btn-videocall" onclick="startVideoCall()">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="13" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 10.5l4.5-2.5v8l-4.5-2.5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        Video Call
+      </button>
+
+      <button class="btn btn-lightblue" onclick="openSettings()">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Settings
+      </button>
+    </div>
+
+    <div class="grid-3col">
+      <button class="btn btn-orange" id="btn-va" onclick="playVA()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        Veteran
+      </button>
+
+      <button class="btn btn-violet" id="btn-assistant" onclick="playMyAssistant()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 4V5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="9" cy="10.5" r="1" fill="currentColor"/><circle cx="12" cy="10.5" r="1" fill="currentColor"/><circle cx="15" cy="10.5" r="1" fill="currentColor"/></svg>
+        My Assistant
+      </button>
+
+      <button class="btn btn-teal" id="btn-clinicalstudy" onclick="playClinicalStudy()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6v4l4 10a2 2 0 0 1-2 3H7a2 2 0 0 1-2-3l4-10V3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 14h8" stroke="currentColor" stroke-width="2"/></svg>
+        Clinical Study
+      </button>
+    </div>
+
+    <div class="status-line" id="status"></div>
+    <div class="status-line error" id="video-status"></div>
+
+    <div class="ad-banner">
+      <div class="ad-content" id="ad-content"></div>
+    </div>
+  </main>
+
+</div>
+
+<div class="fullscreen-screen" id="screen-take-med">
+  <button class="back-btn" onclick="closeScreen('screen-take-med','video-take-med')">← Back</button>
+  <video id="video-take-med" src="videos/take_medication.mp4" playsinline preload="none"></video>
+</div>
+
+<div class="fullscreen-screen" id="screen-va">
+  <button class="back-btn" onclick="closeScreen('screen-va','video-va')">← Back</button>
+  <video id="video-va" src="videos/Capt-lee-jones.mp4" playsinline preload="none"></video>
+</div>
+
+<div class="fullscreen-screen" id="screen-assistant">
+  <button class="back-btn" onclick="closeScreen('screen-assistant','video-assistant')">← Back</button>
+  <video id="video-assistant" src="videos/Brian_2_intro.mp4" playsinline preload="none"></video>
+</div>
+
+<div class="fullscreen-screen light-screen" id="screen-settings">
+  <button class="back-btn" onclick="closeScreen('screen-settings')">← Back</button>
+  <div class="settings-panel">
+    <div class="settings-title">Settings</div>
+    <div class="settings-list">
+      <button class="settings-item" onclick="notImplemented('Language')">Language <span class="chev">›</span></button>
+      <button class="settings-item" onclick="notImplemented('Profile')">Profile <span class="chev">›</span></button>
+      <button class="settings-item" onclick="notImplemented('Health Provider')">Health Provider <span class="chev">›</span></button>
+      <button class="settings-item" onclick="notImplemented('Health Charts')">Health Charts <span class="chev">›</span></button>
+    </div>
+    <div class="settings-version">Software version 12.2v</div>
+    <div class="settings-copyright">2026 © TruMedicines All Rights Reserved</div>
+  </div>
+</div>
+
+<div class="fullscreen-screen" id="screen-clinicalstudy">
+  <button class="back-btn" onclick="closeScreen('screen-clinicalstudy','video-clinicalstudy')">← Back</button>
+  <video id="video-clinicalstudy" src="videos/study.mp4" playsinline preload="none"></video>
+</div>
+
+<div class="fullscreen-screen" id="screen-meds-camera">
+  <button class="back-btn" onclick="stopMedsCamera()">← Back</button>
+  <video id="meds-camera-preview" autoplay playsinline muted></video>
+</div>
+
+<div class="fullscreen-screen" id="screen-videocall">
+  <button class="back-btn" onclick="stopVideoCall()">← Back</button>
+  <video id="video-call-preview" autoplay playsinline muted></video>
+</div>
+
+<div class="fullscreen-screen" id="screen-meds">
+  <button class="back-btn" onclick="closeScreen('screen-meds')">← Back</button>
+  <img id="meds-image" src="images/packets.jpg" alt="Current medication packets" onerror="handleMedsImageError()">
+</div>
+
+<script>
+  // ---- CONFIGURATION ----
+  // Must match the UUIDs in the ESP32 sketch exactly
+  const SERVICE_UUID = "12345678-1234-1234-1234-1234567890ab";
+  const CMD_CHAR_UUID = "12345678-1234-1234-1234-1234567890ac";
+  const STATUS_CHAR_UUID = "12345678-1234-1234-1234-1234567890ad";
+  const DEVICE_NAME = "PillDispenser"; // must match BLEDevice::init() name in the sketch
+
+  // Video/image sources are set directly as src attributes on the <video>/<img>
+  // tags in the HTML (see the fullscreen-screen divs below the main app).
+  // These are relative paths (videos/..., images/...), resolved against
+  // wherever this page is served from - see README.md for how to serve this
+  // folder over http://localhost using a local web server app.
+
+  // ---- BLUETOOTH STATE ----
+  let bleDevice = null;
+  let cmdChar = null;
+  let statusChar = null;
+  let pendingResolve = null; // resolves when a status notification arrives
+
+  function setBlePill(connected, label) {
+    const pill = document.getElementById("ble-pill");
+    pill.classList.toggle("connected", connected);
+    pill.textContent = (connected ? "● " : "● ") + label;
+  }
+
+  async function connectBLE() {
+    if (!navigator.bluetooth) {
+      setStatus("This browser doesn't support Web Bluetooth", true);
+      return;
+    }
+    try {
+      setBlePill(false, "Pairing...");
+      bleDevice = await navigator.bluetooth.requestDevice({
+        filters: [{ name: DEVICE_NAME }],
+        optionalServices: [SERVICE_UUID]
+      });
+      bleDevice.addEventListener("gattserverdisconnected", onDisconnected);
+
+      const server = await bleDevice.gatt.connect();
+      const service = await server.getPrimaryService(SERVICE_UUID);
+      cmdChar = await service.getCharacteristic(CMD_CHAR_UUID);
+      statusChar = await service.getCharacteristic(STATUS_CHAR_UUID);
+
+      await statusChar.startNotifications();
+      statusChar.addEventListener("characteristicvaluechanged", onStatusNotify);
+
+      setBlePill(true, "Connected");
+      setStatus("Connected to " + DEVICE_NAME);
+    } catch (err) {
+      setBlePill(false, "Not connected - tap to pair");
+      setStatus("Pairing failed: " + err.message, true);
+    }
+  }
+
+  function onDisconnected() {
+    cmdChar = null;
+    statusChar = null;
+    setBlePill(false, "Disconnected - tap to reconnect");
+  }
+
+  function onStatusNotify(event) {
+    const value = new TextDecoder().decode(event.target.value);
+    if (pendingResolve) {
+      pendingResolve(value);
+      pendingResolve = null;
+    }
+  }
+
+  // Sends a command and waits for the ESP32's status notification in reply
+  function sendCommand(cmd, timeoutMs = 8000) {
+    return new Promise(async (resolve, reject) => {
+      if (!cmdChar) {
+        reject(new Error("Not connected - tap the Bluetooth pill to pair"));
+        return;
+      }
+      const timer = setTimeout(() => {
+        pendingResolve = null;
+        reject(new Error("No response from ESP32"));
+      }, timeoutMs);
+
+      pendingResolve = (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      };
+
+      try {
+        await cmdChar.writeValue(new TextEncoder().encode(cmd));
+      } catch (err) {
+        clearTimeout(timer);
+        pendingResolve = null;
+        reject(err);
+      }
+    });
+  }
+
+  // ---- DATE/TIME ----
+  const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  function updateDateTime() {
+    const now = new Date();
+    let h = now.getHours();
+    const m = String(now.getMinutes()).padStart(2, "0");
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12; if (h === 0) h = 12;
+    const text = `${DAY_NAMES[now.getDay()]}, ${MONTH_NAMES[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}  •  ${h}:${m} ${ampm}`;
+    document.getElementById("datetime").textContent = text;
+  }
+  setInterval(updateDateTime, 1000);
+  updateDateTime();
+
+  // ---- AD BANNER (5 local sample ads, not a live ad placement) ----
+  const SAMPLE_ADS = [
+    { title: "Stay Hydrated", sub: "Drink water with every dose", bg: "#4a80c4" },
+    { title: "TruMedicines Refill Program", sub: "Never miss a dose - ask about auto-refill", bg: "#2e8555" },
+    { title: "Balance & Fall Prevention", sub: "Ask your provider about a free home safety check", bg: "#8a4a12" },
+    { title: "Community Wellness Class", sub: "Free chair yoga - Tuesdays at 10am", bg: "#5a2d80" },
+    { title: "Caregiver Support Line", sub: "Free, confidential support - available 24/7", bg: "#1a4a72" }
+  ];
+  let adIndex = 0;
+
+  function showAd(index) {
+    const el = document.getElementById("ad-content");
+    el.style.opacity = 0;
+    setTimeout(() => {
+      const ad = SAMPLE_ADS[index];
+      el.parentElement.style.background = ad.bg;
+      el.innerHTML = `<div class="ad-title">${ad.title}</div><div class="ad-sub">${ad.sub}</div>`;
+      el.style.opacity = 1;
+    }, 350);
+  }
+
+  showAd(adIndex);
+  setInterval(() => {
+    adIndex = (adIndex + 1) % SAMPLE_ADS.length;
+    showAd(adIndex);
+  }, 5000);
+
+  // ---- STATUS HELPER ----
+  function setStatus(msg, isError) {
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.classList.toggle("error", !!isError);
+  }
+
+  function setVideoStatus(msg) {
+    document.getElementById("video-status").textContent = msg;
+  }
+
+  function setBusy(btnId, busy) {
+    document.getElementById(btnId).classList.toggle("busy", busy);
+  }
+
+  // ---- FULLSCREEN SCREENS (statically embedded video/image elements) ----
+  function openScreen(screenId, videoId) {
+    setStatus("");
+    setVideoStatus("");
+    document.getElementById(screenId).classList.add("active");
+    if (videoId) {
+      const video = document.getElementById(videoId);
+      video.currentTime = 0;
+      video.onended = () => closeScreen(screenId, videoId);
+      video.onerror = () => {
+        setVideoStatus("Video failed to load - check it's in the videos/ folder with the exact filename");
+        closeScreen(screenId, videoId);
+      };
+      video.play().catch((err) => {
+        setVideoStatus("Could not play video: " + err.message);
+        closeScreen(screenId, videoId);
+      });
+    }
+  }
+
+  function closeScreen(screenId, videoId) {
+    document.getElementById(screenId).classList.remove("active");
+    if (videoId) {
+      const video = document.getElementById(videoId);
+      video.pause();
+    }
+  }
+
+  // ---- BUTTON ACTIONS ----
+  async function takeMedication() {
+    setStatus("Dispensing...");
+    setBusy("btn-take", true);
+    openScreen("screen-take-med", "video-take-med");
+    try {
+      const result = await sendCommand("DISPENSE");
+      setStatus(result === "ok" ? "Dose dispensed" : "ESP32: " + result);
+    } catch (err) {
+      setStatus(err.message, true);
+    } finally {
+      setBusy("btn-take", false);
+    }
+  }
+
+  function playVA() {
+    openScreen("screen-va", "video-va");
+  }
+
+  function playMyAssistant() {
+    openScreen("screen-assistant", "video-assistant");
+  }
+
+  function playClinicalStudy() {
+    openScreen("screen-clinicalstudy", "video-clinicalstudy");
+  }
+
+  function openSettings() {
+    setStatus("");
+    document.getElementById("screen-settings").classList.add("active");
+  }
+
+  // ---- VIDEO CALL (front-facing camera) ----
+  let cameraStream = null;
+
+  async function startVideoCall() {
+    setStatus("");
+    document.getElementById("screen-videocall").classList.add("active");
+    const video = document.getElementById("video-call-preview");
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+        audio: false
+      });
+      video.srcObject = cameraStream;
+    } catch (err) {
+      setStatus("Could not access camera: " + err.message, true);
+      stopVideoCall();
+    }
+  }
+
+  function stopVideoCall() {
+    document.getElementById("screen-videocall").classList.remove("active");
+    const video = document.getElementById("video-call-preview");
+    video.srcObject = null;
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      cameraStream = null;
+    }
+  }
+
+  function notImplemented(name) {
+    setStatus(name + " - not built yet");
+  }
+
+  // ---- VIEW MEDS (photo, then rear "inside dispenser" camera on alternating taps) ----
+  let medsShowCameraNext = false; // first tap shows the photo; second tap shows the rear camera
+  let medsCameraStream = null;
+
+  function showMeds() {
+    if (!medsShowCameraNext) {
+      openScreen("screen-meds");
+    } else {
+      openMedsCamera();
+    }
+    medsShowCameraNext = !medsShowCameraNext;
+  }
+
+  function handleMedsImageError() {
+    closeScreen("screen-meds");
+    setStatus("Meds photo failed to load - check it's at PillApp/images/packets.jpg", true);
+  }
+
+  async function openMedsCamera() {
+    setStatus("");
+    document.getElementById("screen-meds-camera").classList.add("active");
+    const video = document.getElementById("meds-camera-preview");
+    try {
+      medsCameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false
+      });
+      video.srcObject = medsCameraStream;
+    } catch (err) {
+      setStatus("Could not access rear camera: " + err.message, true);
+      stopMedsCamera();
+    }
+  }
+
+  function stopMedsCamera() {
+    document.getElementById("screen-meds-camera").classList.remove("active");
+    const video = document.getElementById("meds-camera-preview");
+    video.srcObject = null;
+    if (medsCameraStream) {
+      medsCameraStream.getTracks().forEach((track) => track.stop());
+      medsCameraStream = null;
+    }
+  }
+</script>
+</body>
+</html>
